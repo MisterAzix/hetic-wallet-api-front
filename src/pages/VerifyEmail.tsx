@@ -1,33 +1,46 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import API from "../services/api";
 
-const VerifyEmail = () => {
-    const [message, setMessage] = useState("");
+interface VerifyEmailResponse {
+    message: string;
+}
 
-    const verifyEmail = async () => {
-        try {
+const VerifyEmail = () => {
+    const [message, setMessage] = useState<string>("");
+    const [loading, setLoading] = useState<boolean>(false);
+
+    useEffect(() => {
+        const verifyEmail = async () => {
             const token = window.location.pathname.split("/").pop();
-            const { data } = await API.post("/auth/verify-email", { token });
-            setMessage(data.message);
-        } catch (error) {
-            setMessage("Email verification failed.");
-        }
-    };
+            if (!token) {
+                setMessage("Invalid verification link.");
+                return;
+            }
+
+            setLoading(true);
+            try {
+                const { data } = await API.post<VerifyEmailResponse>("/auth/verify-email", { token });
+                setMessage(data.message);
+            } catch (error: any) {
+                setMessage(error.response?.data?.message || "Email verification failed.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        verifyEmail();
+    }, []);
 
     return (
         <div className="max-w-md mx-auto p-4 space-y-6">
             <h1 className="text-2xl font-bold text-center">Verify Email</h1>
-
-            <button
-                onClick={verifyEmail}
-                className="w-full bg-blue-500 text-white p-2 rounded"
-            >
-                Verify Email
-            </button>
-
-            {message && <div className="text-center">{message}</div>}
+            {loading ? (
+                <div className="text-center">Verifying...</div>
+            ) : (
+                message && <div className="text-center">{message}</div>
+            )}
         </div>
     );
-}
+};
 
 export default VerifyEmail;
