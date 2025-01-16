@@ -1,7 +1,11 @@
 import axios from "axios";
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 
 const API = axios.create({
-    baseURL: process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api/v1",
+    baseURL: process.env.API_URL,
     withCredentials: true, // Include cookies (for refreshToken)
 });
 
@@ -23,6 +27,53 @@ const addRefreshSubscriber = (callback: (token: string) => void) => {
     refreshSubscribers.push(callback);
 };
 
+
+export const createWallet = async (address: string) => {
+    try {
+      const response = await API.post('/wallet/', { address });
+      return response.data;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  };
+
+  export const getWalletByAddress = async (address: string) => {
+    try {
+      const response = await API.get(`/wallet/${address}`);
+      return response.data;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  };
+
+  export const updateTransactions = async (address: string) => {
+    try {
+      const response = await API.post(`/wallet/${address}`);
+      return response.data;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  };
+
+  export const findSymbolPriceHistory = async (symbol: string) => {
+    try {
+      const response = await API.get(`/pricehistory/${symbol}`);
+      return response.data;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  };
+
+  export const findSymbolCurrentPrice = async (symbol: string) => {
+    try {
+      const response = await API.get(`/pricehistory/current/${symbol}`);
+      return response.data;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  };
+  
+  
 API.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("token");
