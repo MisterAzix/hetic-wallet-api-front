@@ -1,107 +1,97 @@
 import React, { useState, useEffect } from "react";
 import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
 } from "chart.js";
-// import API from "services/api";
 import { Line } from "react-chartjs-2";
-import API from "services/api";
+import { getWalletByAddress, findSymbolPriceHistory } from "../services/api";
+import { format } from "date-fns";
 
 ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
 );
 
-interface PriceEvolution {
+const Dashboard = () => {
+  interface Transaction {
+    date: string;
+    balance: number;
+  }
+
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  interface PriceHistoryEntry {
     date: string;
     price: number;
-}
+  }
 
+  const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-const Dashboard = () => {
-    const [data, setData] = useState<PriceEvolution[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const walletResponse = await getWalletByAddress("0xYourWalletAddress");
+        setTransactions(walletResponse.transactions);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setIsLoading(true);
-                const response = await API.get("/wallet/get_data");
-                setData(response.data);
+        const priceHistoryResponse = await findSymbolPriceHistory("ETH");
+        setPriceHistory(priceHistoryResponse.data);
 
-                // const fakeData: PriceEvolution[] = [
-                //     { date: "2025-01-01", price: 1000 },
-                //     { date: "2025-01-02", price: 1020 },
-                //     { date: "2025-01-03", price: 980 },
-                //     { date: "2025-01-04", price: 1050 },
-                //     { date: "2025-01-05", price: 1100 },
-                //     { date: "2025-01-06", price: 1080 },
-                //     { date: "2025-01-07", price: 1150 },
-                // ];
-                // await new Promise((resolve) => setTimeout(resolve, 1000));
-                // setData(fakeData);
-                setError(null);
-            } catch (err) {
-                setError("Failed to fetch data. Please try again later.");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
-
-    const chartData = {
-        labels: data.map((entry) => entry.date),
-        datasets: [
-            {
-                label: "Crypto Wallet Price Evolution",
-                data: data.map((entry) => entry.price),
-                borderColor: "rgba(75, 192, 192, 1)",
-                backgroundColor: "rgba(75, 192, 192, 0.2)",
-                tension: 0.4,
-            },
-        ],
+        setError(null);
+      } catch (err) {
+        setError("Failed to fetch data. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    const chartOptions = {
-        responsive: true,
-        plugins: {
-            legend: {
-                display: true,
-            },
-            title: {
-                display: true,
-                text: "Crypto Wallet Price Evolution",
-            },
-        },
-    };
+    fetchData();
+  }, []);
 
-    return (
-        <div style={{ padding: "2rem" }}>
-            <h1>Crypto Wallet</h1>
-            {isLoading && <p>Loading...</p>}
-            {error && <p style={{ color: "red" }}>{error}</p>}
-            {!isLoading && !error && data.length > 0 && (
-                <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-                    <Line data={chartData} options={chartOptions} />
-                </div>
-            )}
-            {!isLoading && !error && data.length === 0 && <p>No data available.</p>}
+  const chartData = {
+    labels: transactions.map((entry) => format(new Date(entry.date), "yyyy-MM-dd")),
+    datasets: [
+      {
+        label: "Wallet Balance",
+        data: transactions.map((entry) => entry.balance),
+        borderColor: "rgba(75, 192, 192, 1)",
+        backgroundColor: "rgba(75, 192, 192, 0.2)",
+        fill: false,
+      },
+      {
+        label: "Price Evolution",
+        data: priceHistory.map((entry) => entry.price),
+        borderColor: "rgba(153, 102, 255, 1)",
+        backgroundColor: "rgba(153, 102, 255, 0.2)",
+        fill: false,
+      },
+    ],
+  };
+
+  return (
+    <div className="p-8">
+      <h1 className="text-3xl font-bold">Dashboard</h1>
+      {error && <p className="text-red-500">{error}</p>}
+      {isLoading ? (
+        <p>Loading...</p>
+      ) : (
+        <div className="mt-8">
+          <Line data={chartData} />
         </div>
-    );
+      )}
+    </div>
+  );
 };
 
 export default Dashboard;
