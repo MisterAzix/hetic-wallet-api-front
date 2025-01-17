@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -26,56 +26,59 @@ ChartJS.register(
 
 const Dashboard = () => {
   const { user } = useAuth();
-
-  interface Transaction {
-    date: string;
-    balance: number;
-  }
-
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  interface PriceHistoryEntry {
-    date: string;
-    price: number;
-  }
-
-  const [priceHistory, setPriceHistory] = useState<PriceHistoryEntry[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [wallet, setWallet] = useState<string | null>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [priceHistory, setPriceHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("Fetching wallet data...");
+    if (user && user.wallets.length > 0) {
+      setWallet(user.wallets[0].address);
+      console.log("Wallet address set:", user.wallets[0].address);
+    } else {
+      setWallet(null);
+      console.log("No wallet found for user.");
+    }
+    setLoading(false);
+  }, [user]);
+
+  useEffect(() => {
     const fetchData = async () => {
-      if (user){
-        if (!user.wallets) {
-          setError("Wallet address not available, please add one in the profile page");
-          setIsLoading(false);
-          return;
-        }
-        else {
-          const walletAddress = user.wallets[0].address;
-
+      if (wallet) {
+        setLoading(true);
         try {
-            const walletResponse = await getWalletByAddress(walletAddress);
-            setTransactions(walletResponse.transactions);
+          console.log("Fetching transactions for wallet:", wallet);
+          const transactionsData = await getWalletByAddress(wallet);
+          setTransactions(transactionsData.transactions);
+          console.log("Transactions data:", transactionsData.transactions);
 
-            const priceHistoryResponse = await findSymbolPriceHistory("ETH");
-            setPriceHistory(priceHistoryResponse.data);
+          console.log("Fetching price history for wallet:", wallet);
+          const priceHistoryData = await findSymbolPriceHistory(wallet);
+          setPriceHistory(priceHistoryData.history);
+          console.log("Price history data:", priceHistoryData.history);
 
-            setError(null);
-          } catch (err) {
-            setError("Failed to fetch data. Please try again later.");
-          } finally {
-            setIsLoading(false);
-          }
+          setError(null);
+        } catch (error) {
+          console.error("Failed to fetch data", error);
+          setError("Failed to fetch data");
+        } finally {
+          setLoading(false);
         }
-        
       }
-    
-    
-      
     };
 
     fetchData();
-  }, [user]);
+  }, [wallet]);
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (!wallet) {
+    return <p>Veuillez renseigner un wallet dans profile !</p>;
+  }
 
   const chartData = {
     labels: transactions.map((entry) => format(new Date(entry.date), "yyyy-MM-dd")),
@@ -98,16 +101,10 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
+    <div>
+      <h1>Dashboard</h1>
       {error && <p className="text-red-500">{error}</p>}
-      {isLoading ? (
-        <p>Loading...</p>
-      ) : (
-        <div className="mt-8">
-          <Line data={chartData} />
-        </div>
-      )}
+      <Line data={chartData} />
     </div>
   );
 };
