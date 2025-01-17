@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post('/auth/login', { email, password }, { withCredentials: true });
+      const response = await axios.post('http://localhost:3000/auth/login', { email, password }, { withCredentials: true });
       const { user } = response.data;
       setUser(user);
     } catch (error) {
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      await axios.post('/auth/logout', {}, { withCredentials: true });
+      await axios.post('http://localhost:3000/auth/logout', {}, { withCredentials: true });
       setUser(null);
     } catch (error) {
       console.error('Logout failed', error);
