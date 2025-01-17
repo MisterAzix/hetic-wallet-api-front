@@ -12,6 +12,7 @@ import {
 import { Line } from "react-chartjs-2";
 import { getWalletByAddress, findSymbolPriceHistory } from "../services/api";
 import { format } from "date-fns";
+import { useAuth } from "../hooks/useAuth";
 
 ChartJS.register(
   CategoryScale,
@@ -24,6 +25,8 @@ ChartJS.register(
 );
 
 const Dashboard = () => {
+  const { user } = useAuth();
+
   interface Transaction {
     date: string;
     balance: number;
@@ -41,8 +44,16 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!user || !user.wallets || user.wallets.length === 0) {
+        setError("User not logged in or wallet address not available");
+        setIsLoading(false);
+        return;
+      }
+
+      const walletAddress = user.wallets[0].address;
+
       try {
-        const walletResponse = await getWalletByAddress("0xYourWalletAddress");
+        const walletResponse = await getWalletByAddress(walletAddress);
         setTransactions(walletResponse.transactions);
 
         const priceHistoryResponse = await findSymbolPriceHistory("ETH");
@@ -57,7 +68,7 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, []);
+  }, [user]);
 
   const chartData = {
     labels: transactions.map((entry) => format(new Date(entry.date), "yyyy-MM-dd")),

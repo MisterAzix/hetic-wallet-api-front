@@ -25,7 +25,7 @@ const Login = () => {
 
         try {
             await API.post("/auth/login", { email, password });
-            login();
+            login(email, password);
         } catch (error) {
             console.error("Login failed", error);
             setError("Invalid email or password");
