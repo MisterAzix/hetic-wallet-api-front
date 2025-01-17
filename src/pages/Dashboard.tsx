@@ -44,27 +44,34 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!user || !user.wallets || user.wallets.length === 0) {
-        setError("User not logged in or wallet address not available");
-        setIsLoading(false);
-        return;
+      if (user){
+        if (!user.wallets) {
+          setError("Wallet address not available, please add one in the profile page");
+          setIsLoading(false);
+          return;
+        }
+        else {
+          const walletAddress = user.wallets[0].address;
+
+        try {
+            const walletResponse = await getWalletByAddress(walletAddress);
+            setTransactions(walletResponse.transactions);
+
+            const priceHistoryResponse = await findSymbolPriceHistory("ETH");
+            setPriceHistory(priceHistoryResponse.data);
+
+            setError(null);
+          } catch (err) {
+            setError("Failed to fetch data. Please try again later.");
+          } finally {
+            setIsLoading(false);
+          }
+        }
+        
       }
-
-      const walletAddress = user.wallets[0].address;
-
-      try {
-        const walletResponse = await getWalletByAddress(walletAddress);
-        setTransactions(walletResponse.transactions);
-
-        const priceHistoryResponse = await findSymbolPriceHistory("ETH");
-        setPriceHistory(priceHistoryResponse.data);
-
-        setError(null);
-      } catch (err) {
-        setError("Failed to fetch data. Please try again later.");
-      } finally {
-        setIsLoading(false);
-      }
+    
+    
+      
     };
 
     fetchData();

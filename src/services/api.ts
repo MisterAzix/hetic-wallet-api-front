@@ -119,7 +119,7 @@ API.interceptors.response.use(
 
             try {
                 const { data } = await axios.post(
-                    `${API.defaults.baseURL}/auth/refresh`,
+                    `${API.defaults.baseURL}/auth/refresh-token`,
                     {}, // No need to send data, cookies handle the refreshToken
                     { withCredentials: true } // Ensure cookies are sent
                 );
