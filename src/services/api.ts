@@ -17,12 +17,6 @@ const generateNonce = async () => {
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
 
-const TokenService = {
-    getToken: () => localStorage.getItem("token"),
-    setToken: (token: string) => localStorage.setItem("token", token),
-    removeToken: () => localStorage.removeItem("token"),
-};
-
 const onRefreshed = (token: string) => {
     refreshSubscribers.forEach((callback) => callback(token));
     refreshSubscribers = [];
@@ -99,10 +93,6 @@ export const updateTransactions = async (address: string) => {
   
 API.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("token");
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
         return config;
     },
     (error) => Promise.reject(error)
@@ -135,7 +125,6 @@ API.interceptors.response.use(
                 );
 
                 const { accessToken } = data;
-                TokenService.setToken(accessToken);
 
                 API.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
                 onRefreshed(accessToken);
@@ -146,12 +135,11 @@ API.interceptors.response.use(
             } catch (err: any) {
                 console.error("Token refresh failed:", err.message);
 
-                TokenService.removeToken();
                 isRefreshing = false;
 
                 // wait for 15 seconds 
                 await new Promise((resolve) => setTimeout(resolve, 25000));
-                window.location.href = "/login";
+                window.location.href = "/auth/login";
             }
         }
 
