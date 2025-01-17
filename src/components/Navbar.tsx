@@ -1,15 +1,17 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 import { useAuth } from "../hooks/useAuth";
 import API from "services/api";
 
 const Navbar = () => {
+    const navigate = useNavigate();
     const { user, logout } = useAuth();
 
     const handleLogout = async () => {
-        await API.delete("/auth/logout");
+        await API.post("/auth/logout", {}, { withCredentials: true });
         logout();
-        localStorage.removeItem("token");
+        navigate("/");
     }
 
     return (
@@ -24,8 +26,8 @@ const Navbar = () => {
                     </>
                 ) : (
                     <>
-                        <Link to="/login" className="mr-4">Login</Link>
-                        <Link to="/register" className="bg-blue-500 px-4 py-2 rounded">Register</Link>
+                        <Link to="/auth/login" className="mr-4">Login</Link>
+                        <Link to="/auth/register" className="bg-blue-500 px-4 py-2 rounded">Register</Link>
                     </>
                 )}
             </div>
