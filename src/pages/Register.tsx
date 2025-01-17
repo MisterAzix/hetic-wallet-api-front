@@ -31,9 +31,9 @@ const Register = () => {
 
     setLoading(true);
     try {
-      const { email, password } = formData;
-      await API.post("/auth/register", { email, password });
-      navigate("/login");
+      const { email, password, confirmPassword } = formData;
+      await API.post("/auth/register", { email, password, confirmPassword });
+      navigate("/auth/login");
     } catch (error: any) {
       setErrors([
         error.response?.data?.message ||

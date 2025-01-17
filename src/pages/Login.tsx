@@ -22,10 +22,10 @@ const Login = () => {
             return;
         }
         setIsLoading(true);
+
         try {
-            const { data } = await API.post("/auth/login", { email, password });
+            await API.post("/auth/login", { email, password });
             login();
-            localStorage.setItem("token", data.accessToken);
         } catch (error) {
             console.error("Login failed", error);
             setError("Invalid email or password");
