@@ -24,10 +24,20 @@ ChartJS.register(
   Legend
 );
 
+interface Transaction {
+  date: string;
+  balance: number;
+}
+
+interface Wallet {
+  address: string;
+  symbol: string;
+  transactions: Transaction[]; 
+}
+
 const Dashboard = () => {
   const { user } = useAuth();
-  const [wallet, setWallet] = useState<string | null>(null);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [wallet, setWallet] = useState<Wallet | null>(null);
   const [priceHistory, setPriceHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,8 +45,13 @@ const Dashboard = () => {
   useEffect(() => {
     console.log("Fetching wallet data...");
     if (user && user.wallets.length > 0) {
-      setWallet(user.wallets[0].address);
-      console.log("Wallet address set:", user.wallets[0].address);
+      const walletData: Wallet = {
+        address: user.wallets[0].address,
+        symbol: user.wallets[0].symbol,
+        transactions: user.wallets[0].transactions,
+      };
+      setWallet(walletData);
+      console.log("Wallet data set:", walletData);
     } else {
       setWallet(null);
       console.log("No wallet found for user.");
@@ -49,13 +64,9 @@ const Dashboard = () => {
       if (wallet) {
         setLoading(true);
         try {
-          console.log("Fetching transactions for wallet:", wallet);
-          const transactionsData = await getWalletByAddress(wallet);
-          setTransactions(transactionsData.transactions);
-          console.log("Transactions data:", transactionsData.transactions);
 
-          console.log("Fetching price history for wallet:", wallet);
-          const priceHistoryData = await findSymbolPriceHistory(wallet);
+          console.log("Fetching price history for wallet:", wallet.symbol);
+          const priceHistoryData = await findSymbolPriceHistory(wallet.symbol);
           setPriceHistory(priceHistoryData.history);
           console.log("Price history data:", priceHistoryData.history);
 
@@ -81,11 +92,11 @@ const Dashboard = () => {
   }
 
   const chartData = {
-    labels: transactions.map((entry) => format(new Date(entry.date), "yyyy-MM-dd")),
+    labels: wallet.transactions.map((entry) => format(new Date(entry.date), "yyyy-MM-dd")),
     datasets: [
       {
         label: "Wallet Balance",
-        data: transactions.map((entry) => entry.balance),
+        data: wallet.transactions.map((entry) => entry.balance),
         borderColor: "rgba(75, 192, 192, 1)",
         backgroundColor: "rgba(75, 192, 192, 0.2)",
         fill: false,

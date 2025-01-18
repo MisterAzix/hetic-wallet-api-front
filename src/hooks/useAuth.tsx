@@ -24,13 +24,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+const API = axios.create({
+  baseURL: process.env.REACT_APP_API_URL,
+  withCredentials: true, 
+});
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post('http://localhost:3000/auth/login', { email, password }, { withCredentials: true });
+      console.log(`Logging in with URL: ${API.defaults.baseURL}/auth/login`);
+      const response = await API.post('/auth/login', { email, password });
       const { user } = response.data;
+      console.log(`Login successful: ${JSON.stringify(user)}`);
       setUser(user);
     } catch (error) {
       console.error('Login failed', error);
@@ -40,7 +47,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      await axios.post('http://localhost:3000/auth/logout', {}, { withCredentials: true });
+      console.log(`Logging out with URL: ${API.defaults.baseURL}/auth/logout`);
+      await API.post('/auth/logout');
+      console.log('Logout successful');
       setUser(null);
     } catch (error) {
       console.error('Logout failed', error);
