@@ -69,10 +69,10 @@ const Dashboard: React.FC = () => {
       if (walletData) {
         setLoading(true);
         try {
-          console.log("Fetching price history for wallet:", walletData.symbol);
+          console.log("Fetching price history for symbol:", walletData.symbol);
           const priceHistoryData = await findSymbolPriceHistory(walletData.symbol);
-          setPriceHistory(priceHistoryData.history);
-          console.log("Price history data:", priceHistoryData.history);
+          setPriceHistory(priceHistoryData); // Utilisez directement les données de l'API
+          console.log("Price history data:", priceHistoryData);
           setError(null);
         } catch (error) {
           console.error("Error fetching price history:", error);
