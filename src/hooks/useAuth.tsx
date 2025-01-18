@@ -1,6 +1,16 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import axios from "axios";
 
+interface Transaction {
+  id: string;
+  userId: string;
+  walletId: string;
+  blockNumber: number;
+  transactionIndex: number;
+  balance: number;
+  date: string;
+}
+
 interface Wallet {
   id: string;
   userId: string;
@@ -8,6 +18,7 @@ interface Wallet {
   address: string;
   createdAt: string;
   updatedAt: string;
+  transactions: Transaction[];
 }
 
 interface User {

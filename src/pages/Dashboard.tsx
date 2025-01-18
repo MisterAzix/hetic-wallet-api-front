@@ -10,7 +10,7 @@ import {
   Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import { getWalletByAddress, findSymbolPriceHistory } from "../services/api";
+import {  findSymbolPriceHistory } from "../services/api";
 import { format } from "date-fns";
 import { useAuth } from "../hooks/useAuth";
 
@@ -25,78 +25,81 @@ ChartJS.register(
 );
 
 interface Transaction {
-  date: string;
+  id: string;
+  userId: string;
+  walletId: string;
+  blockNumber: number;
+  transactionIndex: number;
   balance: number;
+  date: string;
 }
 
-interface Wallet {
-  address: string;
+interface WalletInterface {
+  id: string;
+  userId: string;
   symbol: string;
-  transactions: Transaction[]; 
+  address: string;
+  createdAt: string;
+  updatedAt: string;
+  transactions: Transaction[];
 }
 
-const Dashboard = () => {
+const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [walletData, setWalletData] = useState<WalletInterface | null>(null);
   const [priceHistory, setPriceHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log("Fetching wallet data...");
     if (user && user.wallets.length > 0) {
-      const walletData: Wallet = {
-        address: user.wallets[0].address,
-        symbol: user.wallets[0].symbol,
-        transactions: user.wallets[0].transactions,
-      };
-      setWallet(walletData);
+      console.log(user.wallets[0]);
+      const userWalletData : WalletInterface= user.wallets[0];
+      setWalletData(userWalletData);
       console.log("Wallet data set:", walletData);
     } else {
-      setWallet(null);
-      console.log("No wallet found for user.");
+      setWalletData(null);
+      console.log("No walletData found for user.");
     }
     setLoading(false);
   }, [user]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (wallet) {
+    const fetchPriceHistory = async () => {
+      if (walletData) {
         setLoading(true);
         try {
-
-          console.log("Fetching price history for wallet:", wallet.symbol);
-          const priceHistoryData = await findSymbolPriceHistory(wallet.symbol);
+          console.log("Fetching price history for wallet:", walletData.symbol);
+          const priceHistoryData = await findSymbolPriceHistory(walletData.symbol);
           setPriceHistory(priceHistoryData.history);
           console.log("Price history data:", priceHistoryData.history);
-
           setError(null);
         } catch (error) {
-          console.error("Failed to fetch data", error);
-          setError("Failed to fetch data");
+          console.error("Error fetching price history:", error);
+          setError("Error fetching price history");
         } finally {
           setLoading(false);
         }
       }
     };
 
-    fetchData();
-  }, [wallet]);
+    fetchPriceHistory();
+  }, [walletData]);
 
   if (loading) {
     return <p>Loading...</p>;
   }
 
-  if (!wallet) {
+  if (!walletData) {
     return <p>Veuillez renseigner un wallet dans profile !</p>;
   }
 
   const chartData = {
-    labels: wallet.transactions.map((entry) => format(new Date(entry.date), "yyyy-MM-dd")),
+    labels: walletData.transactions.map((entry) => format(new Date(entry.date), "yyyy-MM-dd")),
     datasets: [
       {
         label: "Wallet Balance",
-        data: wallet.transactions.map((entry) => entry.balance),
+        data: walletData.transactions.map((entry) => entry.balance),
         borderColor: "rgba(75, 192, 192, 1)",
         backgroundColor: "rgba(75, 192, 192, 0.2)",
         fill: false,
