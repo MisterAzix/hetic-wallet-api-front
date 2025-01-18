@@ -45,10 +45,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      console.log(`Logging in with URL: ${API.defaults.baseURL}/auth/login`);
       const response = await API.post('/auth/login', { email, password });
       const { user } = response.data;
-      console.log(`Login successful: ${JSON.stringify(user)}`);
       setUser(user);
     } catch (error) {
       console.error('Login failed', error);
@@ -58,9 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      console.log(`Logging out with URL: ${API.defaults.baseURL}/auth/logout`);
       await API.post('/auth/logout');
-      console.log('Logout successful');
       setUser(null);
     } catch (error) {
       console.error('Logout failed', error);
