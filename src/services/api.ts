@@ -53,12 +53,9 @@ export const createWallet = async (address: string, userId: string) => {
 
 export const getWalletByAddress = async (address: string) => {
   try {
-    console.log(`Fetching wallet by address: ${address}`);
     const response = await API.get(`/wallet/${address}`);
-    console.log(`Wallet data: ${JSON.stringify(response.data)}`);
     return response.data;
   } catch (error) {
-    console.error(`Error fetching wallet by address: ${error}`);
     return Promise.reject(error);
   }
 };
