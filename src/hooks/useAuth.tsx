@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import axios from "axios";
 
 interface Transaction {
@@ -43,11 +43,19 @@ const API = axios.create({
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
   const login = async (email: string, password: string) => {
     try {
       const response = await API.post('/auth/login', { email, password });
       const { user } = response.data;
       setUser(user);
+      localStorage.setItem("user", JSON.stringify(user));
     } catch (error) {
       console.error('Login failed', error);
       throw error;
@@ -56,8 +64,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      await API.post('/auth/logout');
+      await API.post('/auth/logout', {}, { withCredentials: true });
       setUser(null);
+      localStorage.removeItem("user");
     } catch (error) {
       console.error('Logout failed', error);
       throw error;
