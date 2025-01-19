@@ -1,6 +1,16 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import axios from "axios";
 
+interface Transaction {
+  id: string;
+  userId: string;
+  walletId: string;
+  blockNumber: number;
+  transactionIndex: number;
+  balance: number;
+  date: string;
+}
+
 interface Wallet {
   id: string;
   userId: string;
@@ -8,6 +18,7 @@ interface Wallet {
   address: string;
   createdAt: string;
   updatedAt: string;
+  transactions: Transaction[];
 }
 
 interface User {
@@ -24,12 +35,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+const API = axios.create({
+  baseURL: process.env.REACT_APP_API_URL,
+  withCredentials: true, 
+});
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post('http://localhost:3000/auth/login', { email, password }, { withCredentials: true });
+      const response = await API.post('/auth/login', { email, password });
       const { user } = response.data;
       setUser(user);
     } catch (error) {
@@ -40,7 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      await axios.post('http://localhost:3000/auth/logout', {}, { withCredentials: true });
+      await API.post('/auth/logout');
       setUser(null);
     } catch (error) {
       console.error('Logout failed', error);
