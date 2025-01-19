@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import API from "../services/api";
 import { useAuth } from "../hooks/useAuth";
 import { Navigate } from "react-router-dom";
 
@@ -12,6 +11,7 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
+
         e.preventDefault();
         if (!email || !password) {
             setError("Please fill in all fields");
@@ -23,12 +23,16 @@ const Login = () => {
         }
         setIsLoading(true);
 
+        setError("");
+
         try {
-            await API.post("/auth/login", { email, password });
             login(email, password);
-        } catch (error) {
-            console.error("Login failed", error);
-            setError("Invalid email or password");
+        } catch (error: any) {
+            if (error.response?.status === 401 && error.response?.data?.message) {
+                setError(error.response.data.message);
+            } else {
+                setError("Invalid email or password");
+            }
         } finally {
             setIsLoading(false);
         }

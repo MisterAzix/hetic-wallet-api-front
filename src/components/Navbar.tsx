@@ -2,16 +2,18 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
-import API from "services/api";
 
 const Navbar = () => {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
 
     const handleLogout = async () => {
-        await API.post("/auth/logout", {}, { withCredentials: true });
+        try {
         logout();
         navigate("/");
+        } catch (error) {
+        console.error("Logout failed:", error);
+        }
     }
 
     return (
